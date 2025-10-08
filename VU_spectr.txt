@@ -1,0 +1,11 @@
+--------- Matrix Settings ---------
+LEDsPerChannel = 32
+LowZoneColor = #00FF00
+MiddleZoneColor = #FFFF00
+HighZoneColor = #FF5D00
+Peak = #FF0000
+Background = #010000
+MiddleZoneStart = 5
+MiddleZoneEnd = 8
+IsBackgroundEnabled = False
+IsFirstLEDCommon = False
