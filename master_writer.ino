@@ -24,17 +24,17 @@ void writeByte( SoftTwoWire &w, uint8_t addr, uint8_t reg, uint8_t byte ){
 }
 
 void MA12070P_configure( SoftTwoWire &w ){
-   writeByte(w, 0x20, 0x00, 0x10); // 0010 0000 Manual Power Mode Profile 2.
-   //writeByte(w, 0x20, 0x0A, 0x80); // 1000 0000 Enables soft-clipping. 
-   writeByte(w, 0x20, 0x1D, 0x01); // 0000 0010 Power Mode Profile 2.
+   writeByte(w, 0x20, 0x00, 0x5D); // 0010 0000 Manual Power Mode Profile 2.
+   writeByte(w, 0x20, 0x1D, 0x01); // 0000 0010 Power Mode Profile 1.
+   writeByte(w, 0x20, 0x0A, 0x80); // 1000 0000 Enables soft-clipping. 
    writeByte(w, 0x20, 0x35, 0x00); // Source: i2s
 
    //writeByte(w, 0x20, 0x35, 0xA8); // 1010 1000 быстрая атака, быстрый спад, использовать аудиопроцессор, i2s
-   //writeByte(w, 0x20, 0x36, 0x41); // 0100 0001 Use the limiter.
-   //writeByte(w, 0x20, 0x47, 0x1A); // 0001 1010 Use the limiter. 26дБ
-   //writeByte(w, 0x20, 0x48, 0x1A); // 0001 1010 Use the limiter. 26дБ
-   //writeByte(w, 0x20, 0x49, 0x1A); // 0001 1010 Use the limiter. 26дБ
-   //writeByte(w, 0x20, 0x4A, 0x1A); // 0001 1010 Use the limiter. 26дБ
+   writeByte(w, 0x20, 0x36, 0x41); // 0100 0001 Use the limiter.
+   writeByte(w, 0x20, 0x47, 0x1A); // 0001 1010 Use the limiter. 26дБ
+   writeByte(w, 0x20, 0x48, 0x1A); // 0001 1010 Use the limiter. 26дБ
+   writeByte(w, 0x20, 0x49, 0x1A); // 0001 1010 Use the limiter. 26дБ
+   writeByte(w, 0x20, 0x4A, 0x1A); // 0001 1010 Use the limiter. 26дБ
 
    Serial.println("End configure MA12070P.");
 }
@@ -139,7 +139,7 @@ void MA12070P_read( SoftTwoWire &w ){
 
 void MA12070P_watch( SoftTwoWire &w, int blink ){
   int adr = 0x20;
-  uint8_t reg = 0x7E;
+  uint8_t reg = 0x7C;
   w.beginTransmission(adr);   // Инициируем передачу данных по шине I2C к устройству с адресом 0x20. При этом сама передача не начнётся.
   w.write(reg);               // Помещаем в буфер для передачи один байт (адрес первого читаемого регистра).
   w.endTransmission(false);   // Выполняем инициированную ранее передачу данных, без установки STOP.
@@ -151,8 +151,26 @@ void MA12070P_watch( SoftTwoWire &w, int blink ){
     //Serial.print(reg, HEX);
     //Serial.print(" : 0x");
     //Serial.println(w.read(), HEX); // Выводим очередной прочитанный байт.
-    if( w.read() == 0 )
-       blinks( blink );
+    uint8_t value = w.read();
+    if( value == 0 ){
+       //blinks( blink );
+     digitalWrite(LED_BUILTIN, HIGH);  // turn the LED on (HIGH is the voltage level)
+     delay(25);                      // wait for a second
+     digitalWrite(LED_BUILTIN, LOW);   // turn the LED off by making the voltage LOW
+     delay(25);                      // wait for a second
+    } 
+    else { // ошибка усилителя -> гасим всех.
+      digitalWrite(9, 0);
+      digitalWrite(10, 0);
+      digitalWrite(11, 0);
+
+      blinks( blink );
+      blinks( blink );
+      for( uint8_t i = 0, bit = 1; i < 8; i++, bit <<= 1 ){
+         if( value & bit )
+            blinks( i );
+      }
+    }
   } 
 
 }
